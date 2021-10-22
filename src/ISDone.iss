@@ -229,7 +229,7 @@ begin
 
     //************************************************ [Архивы ISDone] ***************************************************//
 
-          if not ISArcExtract(0, 0, ExpandConstant('{src}\Data-1.bin'),  ExpandConstant('{app}'), '', False, '{#Password}', ExpandConstant('{tmp}\arc.ini'), ExpandConstant('{app}'), False) then Break;
+          //if not ISArcExtract(0, 0, ExpandConstant('{src}\Data-1.bin'),  ExpandConstant('{app}'), '', False, '{#Password}', ExpandConstant('{tmp}\arc.ini'), ExpandConstant('{app}'), False) then Break;
           if not ISArcExtract(1, 0, ExpandConstant('{src}\Soft-1.bin'),  ExpandConstant('{app}'), '', False, '{#Password}', ExpandConstant('{tmp}\arc.ini'), ExpandConstant('{app}'), False) then Break;
 
     //************************************************ [Архивы ISDone] ***************************************************//
