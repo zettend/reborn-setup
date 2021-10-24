@@ -25,10 +25,10 @@ begin
   MD5Value[1] := '56DAF8C3968BFA41D0F421683EDC363F';   //* Хэш-сумма 1 файла *\\
 //-----------------------------------------------------------------------------------------
   Path[2] := '{src}\Data-1.bin';    //* Путь и название 2 файла  *\\
-  MD5Value[2] := '44D7C877008312EE68D4C65547409BE8';   //* Хэш-сумма 2 файла *\\
+  MD5Value[2] := '12402765CF7729A725EF998FEE9C0905';   //* Хэш-сумма 2 файла *\\
 //-----------------------------------------------------------------------------------------
-  //Path[3] := '{src}\Data-2.bin';    //* Путь и название 3 файла  *\\
-  //MD5Value[3] := 'BA23792CE1BF90E2E8B44C7D5AB3B85F';   //* Хэш-сумма 3 файла *\\
+  Path[3] := '{src}\Data-2.bin';    //* Путь и название 3 файла  *\\
+  MD5Value[3] := '7F96C759A7050EAE8C154EB43EF94F83';   //* Хэш-сумма 3 файла *\\
 //-----------------------------------------------------------------------------------------
   //Path[4]:= '{src}\Video-1.bin';   //* Путь и название 4 файла  *\\
   //MD5Value[4]:= 'C1FD455E79E125EA97CAB82298A5923E';   //* Хэш-сумма 4 файла *\\
@@ -56,9 +56,8 @@ Function CheckMD5(Filename: PAnsiChar; MD5: PAnsiChar; CallBack: TMD5CallBack): 
 Function Size64(Hi, Lo: Integer): Extended;
 begin
   Result := Lo;
-  if Lo < 0 then Result := Result + $7FFFFFFF + $7FFFFFFF + 2;
-  for Hi := Hi - 1 DownTo 0 do
-    Result:= Result + $7FFFFFFF + $7FFFFFFF + 2;
+  if Lo < 0 then Result:= Result + $7FFFFFFF + $7FFFFFFF + 2;
+  For Hi := Hi - 1 DownTo 0 do Result := Result + $7FFFFFFF + $7FFFFFFF + 2;
 end;
 
 Function GetFileSize(const FileName: String): Extended;
@@ -67,10 +66,9 @@ var
 begin
   Result := 0;
   if FindFirst(FileName, FSR) then
-    try
-      if FSR.Attributes and FILE_ATTRIBUTE_DIRECTORY = 0 then
-        Result := Size64(FSR.SizeHigh, FSR.SizeLow) div 1048576;
-    finally
+    Try
+      if FSR.Attributes and FILE_ATTRIBUTE_DIRECTORY = 0 then Result := Size64(FSR.SizeHigh, FSR.SizeLow) DIV (1024 * 1024);
+    Finally
       FindClose(FSR);
     end;
 end;
@@ -80,7 +78,7 @@ var
   Size: Extended;
 begin
   if FileExists(FileName) then begin
-    Size  := GetFileSize(FileName) DIV (1024 * 1024);
+    Size  := GetFileSize(FileName);
     TSize := TSize + Size;
     Total := Total + 1;
   end;
@@ -100,19 +98,22 @@ begin
   SetTaskBarProgressValue(PBPos DIV 10);
   ImgApplyChanges(MainMD5Form.Handle);
 
-  Application.ProcessMessages();
-  Result := not Close;
+  Application.ProcessMessages;
+  if not Close then Result := True else Result := False;
 end;
 
 Function CheckMD(FileName, MD5: String): Boolean;
+var
+  FileNameSize: Extended;
 begin
   TotalProgress := PBPos;
   Result := True;
   if FileExists(FileName) then begin
     CurN := CurN + 1;
     TLabelText(MainMD5FormLabel[3], FmtMessage(ExpandConstant('{cm:MainMD5FormLabel3}'), [IntToStr(CurN), IntToStr(Total)]));
-    if GetFileSize(FileName) <> 0 then begin
-      CurSize := Trunc(GetFileSize(FileName) DIV (1024*1024));
+    FileNameSize := GetFileSize(FileName);
+    if FileNameSize <> 0 then begin
+      CurSize := Trunc(FileNameSize);
       TLabelText(MainMD5FormLabel[2], FmtMessage(ExpandConstant('{cm:MainMD5FormLabel2}'), [ExtractFileName(FileName), MbOrTb(CurSize)]));
       Result := CheckMD5(FileName, PAnsiChar(MD5), @MD5Progress);
     end else begin
@@ -334,7 +335,7 @@ end;
 
 Procedure MD5CheckShow(Sender: TObject);
 begin
-  Try
+  try
   // Звук при нажатии
     SoundClickPlay();
   // Звук при нажатии
@@ -361,11 +362,11 @@ begin
 
   // Если произошла ошибка, то создаём форму ошибки
     if MD5Error and not Close then begin
-      MainMD5Form.Hide();
+      MainMD5Form.Hide;
       ErrorFormCreate();
     end;
   // Если произошла ошибка, то создаём форму ошибки
-  Finally
+  finally
   // Выполняем различные действия с WizardForm
     WizardForm.Enabled := True;
     SetWindowlong(MainMD5Form.Handle, GWL_WNDPROC, MoveMD5);
@@ -375,9 +376,9 @@ begin
   // Выполняем различные действия с WizardForm
 
   // Освобождаем все существующие формы
-    if MainMD5Form  <> nil then MainMD5Form.Free();
-    if CloseMD5Form <> nil then CloseMD5Form.Free();
-    if ErrorMD5Form <> nil then ErrorMD5Form.Free();
+    if MainMD5Form  <> nil then MainMD5Form.Free;
+    if CloseMD5Form <> nil then CloseMD5Form.Free;
+    if ErrorMD5Form <> nil then ErrorMD5Form.Free;
   // Освобождаем все существующие формы
 
   // Выгружаем изображения из памяти
@@ -390,5 +391,5 @@ begin
   // Очищаем переменные
     ClearVars();
   // Очищаем переменные
-  End;
+  end;
 end;
