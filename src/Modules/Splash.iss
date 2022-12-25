@@ -1,8 +1,8 @@
-#define SplashCount "1" ;Количество Splash картинок
+п»ї#define SplashCount "1" ;РљРѕР»РёС‡РµСЃС‚РІРѕ Splash РєР°СЂС‚РёРЅРѕРє
 
-#define SplS "1000" ;Время проявления картинки Splash (1000мс = 1 сек).
-#define SplR "2000" ;Время показа картинки Splash (1000мс = 1 сек).
-#define SplE "1000" ;Время затухания картинки Splash (1000мс = 1 сек).
+#define SplS "1000" ;Р’СЂРµРјСЏ РїСЂРѕСЏРІР»РµРЅРёСЏ РєР°СЂС‚РёРЅРєРё Splash (1000РјСЃ = 1 СЃРµРє).
+#define SplR "2000" ;Р’СЂРµРјСЏ РїРѕРєР°Р·Р° РєР°СЂС‚РёРЅРєРё Splash (1000РјСЃ = 1 СЃРµРє).
+#define SplE "1000" ;Р’СЂРµРјСЏ Р·Р°С‚СѓС…Р°РЅРёСЏ РєР°СЂС‚РёРЅРєРё Splash (1000РјСЃ = 1 СЃРµРє).
 
 [Files]
 Source: InstallFiles\SplashFiles\*.*; Flags: DontCopy
@@ -11,17 +11,17 @@ Source: InstallFiles\SplashFiles\*.*; Flags: DontCopy
 var
   SplashForm: TSetupForm;
 
-//============================================== [Splash - Начало] ==============================================\\
+//============================================== [Splash - РќР°С‡Р°Р»Рѕ] ==============================================\\
 Procedure ShowSplashScreen(P1: HWND; P2: PAnsiChar; P3, P4, P5, P6, P7: Integer; P8: Boolean; P9: Cardinal; P10: Integer); external 'ShowSplashScreen@files:ISGSG.dll stdcall delayload';
 
-Function RunSplash(): Boolean; // Запуск показа Splash
+Function RunSplash(): Boolean; // Р—Р°РїСѓСЃРє РїРѕРєР°Р·Р° Splash
 begin
-  SplashForm:= CreateCustomForm;
-  For i:=1 to {#SplashCount} do begin
+  SplashForm := CreateCustomForm;
+  For i := 1 to {#SplashCount} do begin
     ExtractTemporaryFile('Splash-' + IntToStr(i) + '.png');
     ShowSplashScreen(SplashForm.Handle, ExpandConstant('{tmp}')+'\Splash-' + IntToStr(i) + '.png', {#SplS}, {#SplR}, {#SplE}, 0, 255, False, $FFFFFF, 10);
   end;
   SplashForm.Free;
-  Result:= True;
+  Result := True;
 end;
-//============================================== [Splash - Конец] ==============================================\\
+//============================================== [Splash - РљРѕРЅРµС†] ==============================================\\

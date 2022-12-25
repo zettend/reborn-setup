@@ -1,5 +1,5 @@
-[Code]
-const
+﻿[Code]
+Const
   MAX_PATH              = 260;
   TH32CS_SNAPPROCESS    = $00000002;
   INVALID_HANDLE_VALUE  = -1;
@@ -8,7 +8,7 @@ const
   STARTF_USESHOWWINDOW  = 1;
   NORMAL_PRIORITY_CLASS = $00000020;
 
-type
+Type
   TProcessEntry32 = record
     dwSize: DWORD;
     cntUsage: DWORD;
@@ -58,19 +58,20 @@ type
     hStdOutput: THandle;
     hStdError: THandle;
   end;
+
 var
   _QUIT: Boolean;
   
-function _CreateToolhelp32Snapshot(dwFlags, th32ProcessID: DWORD): THandle; external 'CreateToolhelp32Snapshot@kernel32.dll stdcall';
-function _Process32First(hSnapshot: THandle; var lppe: TProcessEntry32): BOOL; external 'Process32First@kernel32.dll stdcall';
-function _Process32Next(hSnapshot: THandle; var lppe: TProcessEntry32): BOOL; external 'Process32Next@kernel32.dll stdcall';
-function _OpenProcess(dwDesiredAccess: DWORD; bInheritHandle: BOOL; dwProcessId: DWORD): THandle; external 'OpenProcess@kernel32.dll stdcall';
-function _TerminateProcess(hProcess: THandle; uExitCode: UINT): BOOL; external 'TerminateProcess@kernel32.dll stdcall';
-function _CloseHandle(hObject: THandle): BOOL; external 'CloseHandle@kernel32.dll stdcall';
-function _PeekMessage(var lpMsg: _TMsg; hWnd: HWND; wMsgFilterMin, wMsgFilterMax, wRemoveMsg: UINT): BOOL; external 'PeekMessageA@user32.dll stdcall';
-function _TranslateMessage(const lpMsg: _TMsg): BOOL; external 'TranslateMessage@user32.dll stdcall';
-function _DispatchMessage(const lpMsg: _TMsg): Longint; external 'DispatchMessageA@user32.dll stdcall';
-function _CreateProcess(lpApplicationName: PChar; lpCommandLine: PChar;
+Function _CreateToolhelp32Snapshot(dwFlags, th32ProcessID: DWORD): THandle; external 'CreateToolhelp32Snapshot@kernel32.dll stdcall';
+Function _Process32First(hSnapshot: THandle; var lppe: TProcessEntry32): BOOL; external 'Process32First@kernel32.dll stdcall';
+Function _Process32Next(hSnapshot: THandle; var lppe: TProcessEntry32): BOOL; external 'Process32Next@kernel32.dll stdcall';
+Function _OpenProcess(dwDesiredAccess: DWORD; bInheritHandle: BOOL; dwProcessId: DWORD): THandle; external 'OpenProcess@kernel32.dll stdcall';
+Function _TerminateProcess(hProcess: THandle; uExitCode: UINT): BOOL; external 'TerminateProcess@kernel32.dll stdcall';
+Function _CloseHandle(hObject: THandle): BOOL; external 'CloseHandle@kernel32.dll stdcall';
+Function _PeekMessage(var lpMsg: _TMsg; hWnd: HWND; wMsgFilterMin, wMsgFilterMax, wRemoveMsg: UINT): BOOL; external 'PeekMessageA@user32.dll stdcall';
+Function _TranslateMessage(const lpMsg: _TMsg): BOOL; external 'TranslateMessage@user32.dll stdcall';
+Function _DispatchMessage(const lpMsg: _TMsg): Longint; external 'DispatchMessageA@user32.dll stdcall';
+Function _CreateProcess(lpApplicationName: PChar; lpCommandLine: PChar;
   lpProcessAttributes, lpThreadAttributes: DWORD; bInheritHandles: BOOL; dwCreationFlags: DWORD;
     lpEnvironment: PChar; lpCurrentDirectory: PChar; const lpStartupInfo: TStartupInfo;
       var lpProcessInformation: TProcessInformation): BOOL;
@@ -85,7 +86,7 @@ begin
   _DispatchMessage(Msg);
 end;
 
-function _KillProcess(ProcessID: DWORD): Boolean;
+Function _KillProcess(ProcessID: DWORD): Boolean;
 var
   hProcess: THandle;
 begin
@@ -94,7 +95,7 @@ begin
   _CloseHandle(hProcess);
 end;
 
-function _ArrayCharToString(ArrayChar: array of Char): string;
+Function _ArrayCharToString(ArrayChar: array of Char): string;
 var
   i: Integer;
   str: string;
@@ -106,7 +107,7 @@ begin
   Result:= str;
 end;
 
-function _ProcIsRunning(Process: string; ProcessID: DWORD): Boolean;
+Function _ProcIsRunning(Process: string; ProcessID: DWORD): Boolean;
 var
   Snap: THandle;
   pe32: TProcessEntry32;
@@ -136,24 +137,24 @@ begin
  _QUIT:= True;
 end;
 
-function _StartProc(const Filename, Params, WorkingDir: string; const ShowCmd: Word; TerminateChild: Boolean): Boolean;
+Function _StartProc(const Filename, Params, WorkingDir: String; const ShowCmd: Word; TerminateChild: Boolean): Boolean;
 var
   PI: TProcessInformation;
   SI: TStartupInfo;
   ProcessId: DWORD;
-  ProcessName: string;
-  CmdLine: string;
+  ProcessName: String;
+  CmdLine: String;
 begin
-  _QUIT:= False;
-  CmdLine:= '"' + Filename + '" ' + Params;
-  SI.cb:= SizeOf(SI);
-  SI.dwFlags:= STARTF_USESHOWWINDOW;
-  SI.wShowWindow:= ShowCmd;
-  try
-    Result:= _CreateProcess('', PChar(CmdLine), 0, 0, False, NORMAL_PRIORITY_CLASS, '', PChar(WorkingDir), SI, PI);
-  except
+  _QUIT := False;
+  CmdLine := '"' + Filename + '" ' + Params;
+  SI.cb := SizeOf(SI);
+  SI.dwFlags := STARTF_USESHOWWINDOW;
+  SI.wShowWindow := ShowCmd;
+  Try
+    Result := _CreateProcess('', PChar(CmdLine), 0, 0, False, NORMAL_PRIORITY_CLASS, '', PChar(WorkingDir), SI, PI);
+  Except
     ShowExceptionMessage;
-  end;
+  End;
   if Result then
     begin
       WizardForm.OnCloseQuery:= @_WizardFormOnCloseQuery;
@@ -161,11 +162,12 @@ begin
       ProcessId:= PI.dwProcessId;
       _CloseHandle(PI.hProcess);
       _CloseHandle(PI.hThread);
-      while _ProcIsRunning(ProcessName, ProcessID) do;
+      while _ProcIsRunning(ProcessName, ProcessID) do Sleep(512);
       if _QUIT and TerminateChild then _KillProcess(ProcessID);
     end;
 end;
-function ExecAndWait(const Filename, Params, WorkingDir: string; const ShowCmd: Word; TerminateChild: Boolean): Boolean;
+
+Function ExecAndWait(const Filename, Params, WorkingDir: string; const ShowCmd: Word; TerminateChild: Boolean): Boolean;
 begin
   Result:= _StartProc(Filename, Params, WorkingDir, ShowCmd, TerminateChild);
 end;

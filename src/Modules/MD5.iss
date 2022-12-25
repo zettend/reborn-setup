@@ -1,372 +1,395 @@
-[Files]
-Source: InstallFiles\DllFiles\MD5\ISMD5.dll; DestDir: {tmp}; Flags: DontCopy
-
-[CustomMessages]
-rus.Wait=Проверка хеш-сумм установочных файлов... Ждите...
-rus.Check1=Проверка MD5
-rus.Check2=Проверка MD5 — «%1» — %2
-rus.Close=Вы действительно хотите пропустить проверку MD5?%nЕсли хэш-суммы файлов не совпадут,%nто установка может пройти некорректно.%nПропустить проверку?
-rus.Close1=Отмена проверки MD5
-rus.ErrorM1=Хеш-сумма файла — «%1» — не совпадает!
-rus.Error=Корректность установки не гарантируется! %nВы можете, на свой страх и риск, продолжить ее, но лучше перехешируйте торрент и повторите попытку...
-rus.Comparing=Сравнение хеш-суммы файла: «%1» (%2)
-rus.Skip=Пропустить
-rus.Foundfiles=Проверяется файл: %1 из %2
-rus.GSize=Проверено: %1 из %2
-rus.Yes=Да
-rus.No=Нет
-rus.OK=OK
+п»ї[Files]
+Source: InstallFiles\MD5Files\*.*;  Flags: DontCopy
+Source: InstallFiles\MD5Files\ImageMD5\*.*;  Flags: DontCopy
 
 [Code]
-Const
-  ID_QUESTION = 65579;  //Вопрос
-  ID_HAND = 65581;  //Ошибка
-
 Type
   TMD5CallBack = Function (Progress: LongWord): Boolean;
 
-Var
-  MainMD5Form, ExitForm, ErrorForm: TSetupForm;
-  MD5PB: TNewProgressBar;
-  Total, CurN: Integer;
-  CloseForm, MD5Error, CanClose, ContinueInstallMD5: Boolean;
-  ErrOKButton, OKButton, SkipButton, CancelButton: TButton;
-  Ico: TNewIconImage;
-  CheckMD5Label, CheckMD5Label2, CheckMD5Label3, CheckMD5Label4: TLabel;
-  CurFilename: String;
-  CurSize: DWORD;
-  TotalProgress: LongWord;
-  TSize: Extended;
+var
+  MainMD5Form, ErrorMD5Form, CloseMD5Form: TSetupForm;
+  hMD5BreakBtn, hMD5CloseBtn, hErrorMD5YES, hErrorMD5NO, hErrorMD5Close, hCloseMD5YES, hCloseMD5NO, hCloseMD5Close: HWND;
+  Total, CurN, MoveMD5, PBPos, MD5MainFromImg, MD5ErrorFormImg, MD5CloseFormImg, MD5ShadowImage: LongInt;
+  MD5ProgressBar: TImgPB;
+  MD5Error, Close: Boolean;
+  TotalProgress, CurSize: LongWord;
+  TSize, TempSize: Extended;
+  EmptyMD5Label: TLabel;
+  MainMD5FormLabel: Array [0..4] of TLabel;
   Path, MD5Value: Array [1..100] of String;
 
-Procedure MD5();
+Procedure MD5PathAndValue();
 begin
 //-----------------------------------------------------------------------------------------
-  Path[1]:= '{src}\Data-1.bin'; //* Путь и название 1 файла  *\\
-  MD5Value[1]:= '3247D6214E50C0D2BDCF020898E9C7C9';   //* Хэш-сумма 1 файла *\\
+  Path[1] := '{src}\Soft-1.bin'; //* РџСѓС‚СЊ Рё РЅР°Р·РІР°РЅРёРµ 1 С„Р°Р№Р»Р°  *\\
+  MD5Value[1] := '56DAF8C3968BFA41D0F421683EDC363F';   //* РҐСЌС€-СЃСѓРјРјР° 1 С„Р°Р№Р»Р° *\\
 //-----------------------------------------------------------------------------------------
-  Path[2]:= '{src}\Soft-1.bin';    //* Путь и название 2 файла  *\\
-  MD5Value[2]:= '56DAF8C3968BFA41D0F421683EDC363F';   //* Хэш-сумма 2 файла *\\
+  Path[2] := '{src}\Data-1.bin';    //* РџСѓС‚СЊ Рё РЅР°Р·РІР°РЅРёРµ 2 С„Р°Р№Р»Р°  *\\
+  MD5Value[2] := '12402765CF7729A725EF998FEE9C0905';   //* РҐСЌС€-СЃСѓРјРјР° 2 С„Р°Р№Р»Р° *\\
 //-----------------------------------------------------------------------------------------
-  //Path[3]:= '{src}\Data-2.bin';    //* Путь и название 3 файла  *\\
-  //MD5Value[3]:= 'FCB10FB85F2E1981828EDB08413BFC0C';   //* Хэш-сумма 3 файла *\\
+  Path[3] := '{src}\Data-2.bin';    //* РџСѓС‚СЊ Рё РЅР°Р·РІР°РЅРёРµ 3 С„Р°Р№Р»Р°  *\\
+  MD5Value[3] := '7F96C759A7050EAE8C154EB43EF94F83';   //* РҐСЌС€-СЃСѓРјРјР° 3 С„Р°Р№Р»Р° *\\
 //-----------------------------------------------------------------------------------------
-  //Path[4]:= '{src}\Video-1.bin';   //* Путь и название 4 файла  *\\
-  //MD5Value[4]:= '8DC2FE965323A21F586292DAE4751EA1';   //* Хэш-сумма 4 файла *\\
+  //Path[4]:= '{src}\Video-1.bin';   //* РџСѓС‚СЊ Рё РЅР°Р·РІР°РЅРёРµ 4 С„Р°Р№Р»Р°  *\\
+  //MD5Value[4]:= 'C1FD455E79E125EA97CAB82298A5923E';   //* РҐСЌС€-СЃСѓРјРјР° 4 С„Р°Р№Р»Р° *\\
 //-----------------------------------------------------------------------------------------
-  //Path[5]:= '{src}\Soft-1.bin';    //* Путь и название 5 файла  *\\
-  //MD5Value[5]:= '56DAF8C3968BFA41D0F421683EDC363F';   //* Хэш-сумма 5 файла *\\
+  //Path[5]:= '{src}\Video-1.bin';    //* РџСѓС‚СЊ Рё РЅР°Р·РІР°РЅРёРµ 5 С„Р°Р№Р»Р°  *\\
+ // MD5Value[5]:= 'FD3DBF0AFB165FA7ACCD687E5E4321A5';   //* РҐСЌС€-СЃСѓРјРјР° 5 С„Р°Р№Р»Р° *\\
 //-----------------------------------------------------------------------------------------
-  //Path[6]:= '{src}\Video-1.bin';    //* Путь и название 6 файла  *\\
-  //MD5Value[6]:= '56DAF8C3968BFA41D0F421683EDC363F';   //* Хэш-сумма 6 файла *\\
+  //Path[6]:= '{src}\Video-1.bin';    //* РџСѓС‚СЊ Рё РЅР°Р·РІР°РЅРёРµ 6 С„Р°Р№Р»Р°  *\\
+  //MD5Value[6]:= '56DAF8C3968BFA41D0F421683EDC363F';   //* РҐСЌС€-СЃСѓРјРјР° 6 С„Р°Р№Р»Р° *\\
 //-----------------------------------------------------------------------------------------
-  //Path[7]:= '{src}\Soft-1.bin';    //* Путь и название 7 файла  *\\
-  //MD5Value[7]:= '56DAF8C3968BFA41D0F421683EDC363F';   //* Хэш-сумма 7 файла *\\
+  //Path[7]:= '{src}\Soft-1.bin';    //* РџСѓС‚СЊ Рё РЅР°Р·РІР°РЅРёРµ 7 С„Р°Р№Р»Р°  *\\
+  //MD5Value[7]:= '56DAF8C3968BFA41D0F421683EDC363F';   //* РҐСЌС€-СЃСѓРјРјР° 7 С„Р°Р№Р»Р° *\\
 //-----------------------------------------------------------------------------------------
-  //Path[8]:= '{src}\Soft-1.bin';    //* Путь и название 8 файла  *\\
-  //MD5Value[8]:= '56DAF8C3968BFA41D0F421683EDC363F';   //* Хэш-сумма 8 файла *\\
+  //Path[8]:= '{src}\Soft-1.bin';    //* РџСѓС‚СЊ Рё РЅР°Р·РІР°РЅРёРµ 8 С„Р°Р№Р»Р°  *\\
+  //MD5Value[8]:= '56DAF8C3968BFA41D0F421683EDC363F';   //* РҐСЌС€-СЃСѓРјРјР° 8 С„Р°Р№Р»Р° *\\
 //-----------------------------------------------------------------------------------------
-  //Path[9]:= '{src}\Video-1.bin';     //* Путь и название 9 файла  *\\
-  //MD5Value[9]:= '29784010AF1A8221818944B60BF2C18A';   //* Хэш-сумма 9 файла *\\
+  //Path[9]:= '{src}\Video-1.bin';     //* РџСѓС‚СЊ Рё РЅР°Р·РІР°РЅРёРµ 9 С„Р°Р№Р»Р°  *\\
+  //MD5Value[9]:= '29784010AF1A8221818944B60BF2C18A';   //* РҐСЌС€-СЃСѓРјРјР° 9 С„Р°Р№Р»Р° *\\
 //-----------------------------------------------------------------------------------------
 end;
 
-Function CheckMD5(Filename: PAnsiChar; MD5: PAnsiChar; CallBack: TMD5CallBack): Boolean; External 'CheckMD5@files:ISMD5.dll stdcall';
+//================================================= [ РџСЂРѕРІРµСЂРєР° MD5 ] =================================================\\
+Function CheckMD5(Filename: PAnsiChar; MD5: PAnsiChar; CallBack: TMD5CallBack): Boolean; External 'CheckMD5@files:ISMD5.dll StdCall';
 
 Function Size64(Hi, Lo: Integer): Extended;
 begin
-  Result:= Lo;
-  if Lo<0 then Result:= Result + $7FFFFFFF + $7FFFFFFF + 2;
-  For Hi:= Hi-1 DownTo 0 do Result:= Result + $7FFFFFFF + $7FFFFFFF + 2;
+  Result := Lo;
+  if Lo < 0 then Result:= Result + $7FFFFFFF + $7FFFFFFF + 2;
+  For Hi := Hi - 1 DownTo 0 do Result := Result + $7FFFFFFF + $7FFFFFFF + 2;
 end;
 
 Function GetFileSize(const FileName: String): Extended;
 var
   FSR: TFindRec;
 begin
-  Result:= 0;
+  Result := 0;
   if FindFirst(FileName, FSR) then
     Try
-      if FSR.Attributes and FILE_ATTRIBUTE_DIRECTORY = 0 then Result:= Size64(FSR.SizeHigh, FSR.SizeLow) div (1024*1024);
-      Finally
+      if FSR.Attributes and FILE_ATTRIBUTE_DIRECTORY = 0 then Result := Size64(FSR.SizeHigh, FSR.SizeLow) DIV (1024 * 1024);
+    Finally
       FindClose(FSR);
     end;
 end;
 
-Function Exists(const FileName: string): Extended;
+Procedure FileCountAndSize(const FileName: String);
 var
   Size: Extended;
 begin
   if FileExists(FileName) then begin
-    Size:= GetFileSize(FileName);
-    TSize:= TSize + Size;
-    Total:= Total + 1;
+    Size  := GetFileSize(FileName);
+    TSize := TSize + Size;
+    Total := Total + 1;
   end;
-  Result:= Size;
 end;
 
-Function MD5Progress(Progress: Longword): Boolean;
+Function MD5Progress(Progress: LongWord): Boolean;
 begin
-  MD5PB.Position:= TotalProgress + (Progress * CurSize div Trunc(TSize)) + 1;
-  CheckMD5Label3.Caption:= FmtMessage('%1.%2 %', [IntToStr(MD5PB.Position div 10), chr(48 + MD5PB.Position mod 10)]);
-  CheckMD5Label4.Caption:= FmtMessage(ExpandConstant('{cm:GSize}'), [MbOrTb(Trunc(TSize) * MD5PB.Position div 1000), MbOrTb(TSize)]);
-  MainMD5Form.Caption:= FmtMessage(ExpandConstant('{cm:Check2}'), [CurFilename, CheckMD5Label3.Caption]);
+  PBPos := TotalProgress + (Progress * CurSize DIV Trunc(TSize)) + 1;
+  if PBPos > 1000 then PBPos := 1000;
+  TempSize := TSize * PBPos DIV 1024;
+  if TempSize > TSize then TempSize := TSize;
+
+  TLabelText(MainMD5FormLabel[0], FmtMessage('%1.%2 %', [IntToStr(PBPos DIV 10), CHR(48 + PBPos MOD 10)]));
+  TLabelText(MainMD5FormLabel[4], FmtMessage(ExpandConstant('{cm:MainMD5FormLabel4}'), [MbOrTb(TempSize), MbOrTb(TSize)]));
+
+  ImgPBSetPosition(MD5ProgressBar, PBPos);
+  SetTaskBarProgressValue(PBPos DIV 10);
+  ImgApplyChanges(MainMD5Form.Handle);
+
   Application.ProcessMessages;
-  SetTaskBarProgressValue((TotalProgress + (Progress * CurSize div Trunc(TSize)) + 1) div 10);
-  if CloseForm then Result:= False else Result:= True;
+  if not Close then Result := True else Result := False;
 end;
 
 Function CheckMD(FileName, MD5: String): Boolean;
+var
+  FileNameSize: Extended;
 begin
-  TotalProgress:= MD5PB.Position;
-  Result:= True;
+  TotalProgress := PBPos;
+  Result := True;
   if FileExists(FileName) then begin
-    CurFilename:= ExtractFilename(FileName);
-    CurN:= CurN+1;
-    CheckMD5Label2.Caption:= FmtMessage(ExpandConstant('{cm:Foundfiles}'), [IntToStr(CurN), IntToStr(Total)]);
-    if GetFileSize(FileName)*(1024*1024) <> 0 then begin
-      CurSize:= Trunc(GetFileSize(FileName));
-      CheckMD5Label.Caption:= FmtMessage(ExpandConstant('{cm:Comparing}'), [CurFilename, MbOrTb(CurSize)]);
-      Result:= CheckMD5(FileName, PAnsiChar(MD5), @MD5Progress);
+    CurN := CurN + 1;
+    TLabelText(MainMD5FormLabel[3], FmtMessage(ExpandConstant('{cm:MainMD5FormLabel3}'), [IntToStr(CurN), IntToStr(Total)]));
+    FileNameSize := GetFileSize(FileName);
+    if FileNameSize <> 0 then begin
+      CurSize := Trunc(FileNameSize);
+      TLabelText(MainMD5FormLabel[2], FmtMessage(ExpandConstant('{cm:MainMD5FormLabel2}'), [ExtractFileName(FileName), MbOrTb(CurSize)]));
+      Result := CheckMD5(FileName, PAnsiChar(MD5), @MD5Progress);
     end else begin
-      MainMD5Form.Free;
-      Result:= False;
+      Result := False;
     end;
   end;
 end;
 
-Procedure BtnShow();
+Procedure ClearVars();
 begin
-  BtnSetEnabled(hNextBtn, True);
-  BtnSetEnabled(hMD5Btn, True);
-  BtnSetEnabled(Min, True);
-  BtnSetEnabled(CloseBtn, True);
+  Close := False; MD5Error := True;
+  Total := 0; CurN := 0; PBPos := 0; CurSize := 0; TotalProgress := 0; TSize := 0;
+end;
+//================================================= [ РџСЂРѕРІРµСЂРєР° MD5 ] =================================================\\
+
+//================================================= [ Р¤РѕСЂРјР° РѕС‚РјРµРЅС‹ ] =================================================\\
+Procedure CloseMD5NOClick();
+begin
+  SoundClickPlay();
+  MainMD5Form.Show;
+  CloseMD5Form.Close;
 end;
 
-Procedure BtnHide();
+Procedure CloseMD5YESClick();
 begin
-  BtnSetEnabled(hNextBtn, False);
-  BtnSetEnabled(hMD5Btn, False);
-  BtnSetEnabled(Min, False);
-  BtnSetEnabled(CloseBtn, False);
-  BtnSetVisibility(hMD5Btn, False);
-  ContinueInstallMD5:= True;
+  SoundClickPlay();
+  WizardForm.Enabled := True;
+  Close := True;
+  CloseMD5Form.Close;
 end;
 
-//******************************************************** [Форма Выхода - Начало] ********************************************************\\
-Procedure MD5FormClose(Sender: TObject; var CanClose: Boolean);
+Procedure CloseFormCreate();
 begin
-  MainMD5Form.Hide;
-  CanClose:= False;
-
-  ExitForm:= CreateCustomForm();
-  with ExitForm do begin
-    ClientWidth:= ScaleX(360);
-    ClientHeight:= ScaleY(150);
-    Caption:= ExpandConstant('{cm:Close1}');
-    Ico:= TNewIconImage.Create(ExitForm);
-
-    with Ico do begin
-      Parent:= ExitForm;
-      Left:= ScaleX(20);
-      Top:= ScaleY(40);
-      Icon.Handle:= ID_QUESTION;
-    end;
-
-    with TBevel.Create(ExitForm) do begin
-      SetBounds(ScaleX(0), ScaleY(105), ScaleY(ExitForm.Width), ScaleY(2));
-      Parent:= ExitForm;
-    end;
-
-    with TNewStaticText.Create(ExitForm) do begin
-      SetBounds(ScaleX(65), ScaleY(25), ScaleX(278), ScaleY(60));
-      AutoSize:= False;
-      WordWrap:= True;
-      Caption:= ExpandConstant('{cm:Close}');
-      Parent:= ExitForm;
-    end;
-
-    CancelButton:= TButton.Create(ExitForm);
-    with CancelButton do begin
-      SetBounds(ScaleX(MainMD5Form.Width - Width - 15), ScaleY(MainMD5Form.Height - Height * 2 - 13), ScaleX(75), ScaleY(23));
-      Caption:= ExpandConstant('{cm:No}');
-      ModalResult:= mrCancel;
-      Parent:= ExitForm;
-      Cursor:= CrHand;
-    end;
-
-    OkButton:= TButton.Create(ExitForm);
-    with OkButton do begin
-      SetBounds(ScaleX(CancelButton.Left - Width - 5), ScaleY(CancelButton.Top), ScaleX(CancelButton.Width), ScaleY(CancelButton.Height));
-      Caption:= ExpandConstant('{cm:Yes}');
-      ModalResult:= mrOk;
-      Parent:= ExitForm;
-      Cursor:= CrHand;
-    end;
-
-    ActiveControl:= CancelButton;
-    Center;
-  end;
-
-  if ExitForm.ShowModal() = mrCancel then begin
-    CloseForm:= False;
-    MainMD5Form.Show;
-  end else begin
-    CloseForm:= True;
-    MainMD5Form.Hide;
-    BtnShow();
-  end;
-end;
-
-Procedure CBClick(Sender: TObject);
-begin
-  MD5FormClose(Sender, CanClose);
-end;
-//******************************************************** [Форма "Выход" - Конец] ********************************************************\\
-
-//******************************************************** [Основная Форма - Начало] ********************************************************\\
-Procedure MD5Form(Sender: TObject);
-begin
-  MainMD5Form:= CreateCustomForm();
-  with MainMD5Form do begin
+  CloseMD5Form := CreateCustomForm();
+  with CloseMD5Form do begin
+    BorderStyle := bsNone;
     FormStyle := FsStayOnTop;
-    ClientWidth:= ScaleX(360);
-    ClientHeight:= ScaleY(150);
-    OnCloseQuery:= @MD5FormClose;
-    Center;
-
-    with TLabel.Create(MainMD5Form) do begin
-      SetBounds(ScaleX(5), ScaleY(5), ScaleX(350), ScaleY(15));
-      Caption:= ExpandConstant('{cm:Wait}');
-      Transparent:= True;
-      Parent:= MainMD5Form;
-    end;
-
-    CheckMD5Label:= TLabel.Create(MainMD5Form);
-    with CheckMD5Label do begin
-      SetBounds(ScaleX(5), ScaleY(25), ScaleX(350), ScaleY(15));
-      Transparent:= True;
-      Parent:= MainMD5Form;
-    end;
-
-    CheckMD5Label2:= TLabel.Create(MainMD5Form);
-    with CheckMD5Label2 do begin
-      SetBounds(ScaleX(5), ScaleY(65), ScaleX(300), ScaleY(15));
-      Transparent:= True;
-      Parent:= MainMD5Form;
-    end;
-
-    CheckMD5Label3:= TLabel.Create(MainMD5Form);
-    with CheckMD5Label3 do begin
-      SetBounds(ScaleX(240), ScaleY(70), ScaleX(50), ScaleY(15));
-      Transparent:= True;
-      Font.Name:= 'Arial';
-      Font.Size:= 14;
-      Parent:= MainMD5Form;
-    end;
-
-    CheckMD5Label4:= TLabel.Create(MainMD5Form);
-    with CheckMD5Label4 do begin
-      SetBounds(ScaleX(5), ScaleY(85), ScaleX(300), ScaleY(15));
-      Transparent:= True;
-      Parent:= MainMD5Form;
-    end;
-
-    MD5PB:= TNewProgressBar.Create(MainMD5Form);
-    with MD5PB do begin
-      Min:= 0;
-      Max:= 1000;
-      SetBounds(ScaleX(5), ScaleY(45), ScaleX(350), ScaleY(15));
-      Parent:= MainMD5Form;
-    end;
-
-    with TBevel.Create(MainMD5Form) do begin
-      SetBounds(ScaleX(0), ScaleY(105), ScaleX(MainMD5Form.Width), ScaleY(2));
-      Parent:= MainMD5Form;
-    end;
-
-    SkipButton:= TButton.Create(MainMD5Form);
-    with SkipButton do begin
-      SetBounds(ScaleX(MainMD5Form.Width - Width - 15), ScaleY(MainMD5Form.Height - Height * 2 - 13), ScaleX(75), ScaleY(23));
-      Caption:= ExpandConstant('{cm:Skip}');
-      OnClick:= @CBClick;
-      Parent:= MainMD5Form;
-      Cursor:= CrHand;
-    end;
+    ClientWidth := ScaleX(450);
+    ClientHeight := ScaleY(136);
+    CenterInsideControl(MainMD5Form, False);
+    Hide;
   end;
+
+// РљРЅРѕРїРєРё
+  hCloseMD5Close := BtnCreate(CloseMD5Form.Handle, ScaleX(422), ScaleY(12), ScaleX(12), ScaleY(12), 'MD5CloseBtn.png', 1, False);
+  BtnSetFont(hCloseMD5Close, BtnFont.Handle);
+  BtnSetEvent(hCloseMD5Close, BtnMouseEnterEventID, CallBackAddr('SoundEnterPlay'));
+  BtnSetEvent(hCloseMD5Close, BtnClickEventID, CallBackAddr('CloseMD5NOClick'));
+  BtnSetCursor(hCloseMD5Close, GetSysCursorHandle(32649));
+
+  hCloseMD5YES := BtnCreate(CloseMD5Form.Handle, ScaleX(278), ScaleY(100), ScaleX(65), ScaleY(20), 'MD5BreakBtn.png', 1, False);
+  BtnSetFont(hCloseMD5YES, BtnFont.Handle);
+  BtnSetFontColor(hCloseMD5YES, $262626, $262626, $262626, $262626);
+  BtnSetEvent(hCloseMD5YES, BtnMouseEnterEventID, CallBackAddr('SoundEnterPlay'));
+  BtnSetEvent(hCloseMD5YES, BtnClickEventID, CallBackAddr('CloseMD5YESClick'));
+  BtnSetCursor(hCloseMD5YES, GetSysCursorHandle(32649));
+  BtnSetText(hCloseMD5YES, 'Р”Р°');
+
+  hCloseMD5NO := BtnCreate(CloseMD5Form.Handle, ScaleX(358), ScaleY(100), ScaleX(65), ScaleY(20), 'MD5BreakBtn.png', 1, False);
+  BtnSetFont(hCloseMD5NO, BtnFont.Handle);
+  BtnSetFontColor(hCloseMD5NO, $262626, $262626, $262626, $262626);
+  BtnSetEvent(hCloseMD5NO, BtnMouseEnterEventID, CallBackAddr('SoundEnterPlay'));
+  BtnSetEvent(hCloseMD5NO, BtnClickEventID, CallBackAddr('CloseMD5NOClick'));
+  BtnSetCursor(hCloseMD5NO, GetSysCursorHandle(32649));
+  BtnSetText(hCloseMD5NO, 'РќРµС‚');
+// РљРЅРѕРїРєРё
+
+// РР·РѕР±СЂР°Р¶РµРЅРёРµ
+  MD5CloseFormImg := ImgLoad(CloseMD5Form.Handle, 'MD5CloseForm.png', ScaleX(0), ScaleY(0), ScaleX(450),  ScaleY(136), True, True);
+  ImgSetVisibility(MD5CloseFormImg, True);
+  ImgApplyChanges(CloseMD5Form.Handle);
+// РР·РѕР±СЂР°Р¶РµРЅРёРµ
+
+  SetClassLong(CloseMD5Form.Handle, -26, GetClassLong(CloseMD5Form.Handle, -26) or $200);
+  CloseMD5Form.ShowModal;
+end;
+//================================================= [ Р¤РѕСЂРјР° РѕС‚РјРµРЅС‹ ] =================================================\\
+
+//================================================= [ РћСЃРЅРѕРІРЅР°СЏ С„РѕСЂРјР° ] =================================================\\
+Function MoveMD5Func(h: HWND; Msg, wParam, lParam: longint): LongInt;
+begin
+  if Msg = WM_MOVE then begin
+    SetWindowPos(WizardForm.Handle, 0, MainMD5Form.Left - (WizardForm.ClientWidth / 2) + (MainMD5Form.ClientWidth / 2), MainMD5Form.Top - (WizardForm.ClientHeight / 2) + (MainMD5Form.ClientHeight / 2), 0, 0, $415);
+  end;
+  Result := CallWindowProc(MoveMD5, h, Msg, wParam, lParam);
+end;
+
+Procedure MD5FrameMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  MainMD5Form.SetFocus;
+  ReleaseCapture;
+  SendMessage(MainMD5Form.Handle, $0112, $F012, 0);
+end;
+
+Procedure MD5BreakBtnClick();
+begin
+  SoundClickPlay();
+  MainMD5Form.Hide;
+  CloseFormCreate();
+end;
+
+Procedure MainFormCreate();
+begin
+  MainMD5Form := CreateCustomForm();
+  with MainMD5Form do begin
+    BorderStyle := bsNone;
+    FormStyle := FsStayOnTop;
+    ClientWidth := ScaleX(450);
+    ClientHeight := ScaleY(208);
+    CenterInsideControl(WizardForm, True);
+    Hide;
+  end;
+
+// РљРЅРѕРїРєРё
+  hMD5CloseBtn := BtnCreate(MainMD5Form.Handle, ScaleX(422), ScaleY(12), ScaleX(12), ScaleY(12), 'MD5CloseBtn.png', 1, False);
+  BtnSetFont(hMD5CloseBtn, BtnFont.Handle);
+  BtnSetEvent(hMD5CloseBtn, BtnMouseEnterEventID, CallBackAddr('SoundEnterPlay'));
+  BtnSetEvent(hMD5CloseBtn, BtnClickEventID, CallBackAddr('MD5BreakBtnClick'));
+  BtnSetCursor(hMD5CloseBtn, GetSysCursorHandle(32649));
+
+  hMD5BreakBtn := BtnCreate(MainMD5Form.Handle, ScaleX(375), ScaleY(177), ScaleX(65), ScaleY(20), 'MD5BreakBtn.png', 1, False);
+  BtnSetFont(hMD5BreakBtn, BtnFont.Handle);
+  BtnSetFontColor(hMD5BreakBtn, $262626, $262626, $262626, $262626);
+  BtnSetEvent(hMD5BreakBtn, BtnMouseEnterEventID, CallBackAddr('SoundEnterPlay'));
+  BtnSetEvent(hMD5BreakBtn, BtnClickEventID, CallBackAddr('MD5BreakBtnClick'));
+  BtnSetCursor(hMD5BreakBtn, GetSysCursorHandle(32649));
+  BtnSetText(hMD5BreakBtn, 'РћС‚РјРµРЅР°');
+// РљРЅРѕРїРєРё
+
+// РР·РѕР±СЂР°Р¶РµРЅРёРµ
+  MD5MainFromImg := ImgLoad(MainMD5Form.Handle, 'MD5Form.png', ScaleX(0), ScaleY(0), ScaleX(450),  ScaleY(208), True, True);
+  ImgSetVisibility(MD5MainFromImg, True);
+  ImgApplyChanges(MainMD5Form.Handle);
+// РР·РѕР±СЂР°Р¶РµРЅРёРµ
+
+// РџСЂРѕРіСЂРµСЃСЃ Р±Р°СЂ
+  MD5ProgressBar := ImgPBCreate(MainMD5Form.Handle, 'MD5PB0.png', 'MD5PB1.png', ScaleX(0), ScaleY(89), ScaleX(450), ScaleY(30));
+  ImgPBVisibility(MD5ProgressBar, True);
+// РџСЂРѕРіСЂРµСЃСЃ Р±Р°СЂ
+
+// Р›РµР№Р±Р»С‹
+  MainMD5FormLabel[0] := TLabelCreate(MainMD5Form, 212, 96,  348, 16, 11, '', {#FontName}, $ecf0f1, [], False, taLeftJustify, nil, nil);
+  MainMD5FormLabel[1] := TLabelCreate(MainMD5Form, 12,  11,  348, 16, 10, '', {#FontName}, $262626, [], False, taLeftJustify, nil, nil);
+  MainMD5FormLabel[2] := TLabelCreate(MainMD5Form, 20,  61,  368, 16, 10, '', {#FontName}, $262626, [], False, taLeftJustify, nil, nil);
+  MainMD5FormLabel[3] := TLabelCreate(MainMD5Form, 20,  129, 348, 16, 10, '', {#FontName}, $262626, [], False, taLeftJustify, nil, nil);
+  MainMD5FormLabel[4] := TLabelCreate(MainMD5Form, 20,  156, 348, 16, 10, '', {#FontName}, $262626, [], False, taLeftJustify, nil, nil);
+
+  TLabelText(MainMD5FormLabel[1], CustomMessage('MainMD5FormLabel1'));
+  EmptyMD5Label := TLabelCreate(MainMD5Form, 0, 0, 450, 30, 10, '', {#FontName}, $262626, [], False, taLeftJustify, nil, @MD5FrameMouseDown);
+// Р›РµР№Р±Р»С‹
+
+  SetClassLong(MainMD5Form.Handle, -26, GetClassLong(MainMD5Form.Handle, -26) or $200);
+  MoveMD5 := SetWindowLong(MainMD5Form.Handle, GWL_WNDPROC, CallBackAddr('MoveMD5Func'));
+  WizardForm.Enabled := False;
   MainMD5Form.Show;
 end;
-//******************************************************** [Основная Форма - Конец] ********************************************************\\
+//================================================= [ РћСЃРЅРѕРІРЅР°СЏ С„РѕСЂРјР° ] =================================================\\
 
-//******************************************************** [Форма Ошибки - Начало] ********************************************************\\
-Procedure MD5FormError(Sender: TObject);
+//================================================= [ Р¤РѕСЂРјР° РѕС€РёР±РєРё ] =================================================\\
+Procedure ErrorMD5YESClick();
 begin
-  ErrorForm:= CreateCustomForm();
-  with ErrorForm do begin
-    ClientWidth:= ScaleX(360);
-    ClientHeight:= ScaleY(150);
-    Caption:= FmtMessage(ExpandConstant('{cm:ErrorM1}'), [CurFilename]);
-    Ico:= TNewIconImage.Create(ErrorForm);
-
-    with Ico do begin
-      Parent:= ErrorForm;
-      Left:= ScaleX(20);
-      Top:= ScaleY(40);
-      Icon.Handle:= ID_HAND;
-    end;
-
-    with TBevel.Create(ErrorForm) do begin
-      SetBounds(ScaleX(0), ScaleY(105), ScaleX(ErrorForm.Width), ScaleY(2));
-      Parent:= ErrorForm;
-    end;
-
-    with TNewStaticText.Create(ErrorForm) do begin
-      SetBounds(ScaleX(65), ScaleY(35), ScaleX(278), ScaleY(60));
-      AutoSize:= False;
-      WordWrap:= True;
-      Caption:= ExpandConstant('{cm:Error}');
-      Parent:= ErrorForm;
-    end;
-
-    ErrOKButton:= TButton.Create(ErrorForm);
-    with ErrOKButton do begin
-      SetBounds(ScaleX(MainMD5Form.Width - Width - 15), ScaleY(MainMD5Form.Height - Height * 2 - 13), ScaleX(75), ScaleY(23));
-      Caption:= ExpandConstant('{cm:OK}');
-      ModalResult:= mrCancel;
-      Parent:= ErrorForm;
-      Cursor:= CrHand;
-    end;
-
-    ActiveControl:= ErrOKButton;
-    Center;
-  end;
-
-  if ErrorForm.ShowModal() = mrCancel then BtnShow;
+  SoundClickPlay();
+  ErrorMD5Form.Close;
 end;
-//******************************************************** [Форма Ошибки - Конец] ********************************************************\\
 
-//******************************************************** [Проверка MD5 - Начало] ********************************************************\\
-Procedure MD5Hash(Sender: TObject);
+Procedure ErrorMD5NOClick();
 begin
-  MD5();
-  BtnHide();
-  For i:= 1 to 100 do Exists(ExpandConstant(Path[i]));
-  MD5Form(Sender);
+  SoundClickPlay();
+  ErrorMD5Form.Close;
+  Application.Terminate;
+end;
 
-  For i:= 1 to Total + 1 do begin
-    MD5Error:= True;
-    if not CheckMD(ExpandConstant(Path[i]), MD5Value[i]) then Break;
-    MD5Error:= False;
+Procedure ErrorFormCreate();
+begin
+  ErrorMD5Form := CreateCustomForm();
+  with ErrorMD5Form do begin
+    BorderStyle := bsNone;
+    FormStyle := FsStayOnTop;
+    ClientWidth := ScaleX(450);
+    ClientHeight := ScaleY(136);
+    CenterInsideControl(WizardForm, False);
+    Hide;
   end;
 
-  if not CloseForm and not MD5Error then begin
-    MainMD5Form.Hide;
-    BtnShow();
-  end;
+// РљРЅРѕРїРєРё
+  hErrorMD5Close := BtnCreate(ErrorMD5Form.Handle, ScaleX(422), ScaleY(12), ScaleX(12), ScaleY(12), 'MD5CloseBtn.png', 1, False);
+  BtnSetFont(hErrorMD5Close, BtnFont.Handle);
+  BtnSetEvent(hErrorMD5Close, BtnMouseEnterEventID, CallBackAddr('SoundEnterPlay'));
+  BtnSetEvent(hErrorMD5Close, BtnClickEventID, CallBackAddr('ErrorMD5NOClick'));
+  BtnSetCursor(hErrorMD5Close, GetSysCursorHandle(32649));
 
-  if not CloseForm and MD5Error then begin
-    MainMD5Form.Hide
-    MD5FormError(Sender);
+  hErrorMD5YES := BtnCreate(ErrorMD5Form.Handle, ScaleX(278), ScaleY(100), ScaleX(65), ScaleY(20), 'MD5BreakBtn.png', 1, False);
+  BtnSetFont(hErrorMD5YES, BtnFont.Handle);
+  BtnSetFontColor(hErrorMD5YES, $262626, $262626, $262626, $262626);
+  BtnSetEvent(hErrorMD5YES, BtnMouseEnterEventID, CallBackAddr('SoundEnterPlay'));
+  BtnSetEvent(hErrorMD5YES, BtnClickEventID, CallBackAddr('ErrorMD5YESClick'));
+  BtnSetCursor(hErrorMD5YES, GetSysCursorHandle(32649));
+  BtnSetText(hErrorMD5YES, 'Р”Р°');
+
+  hErrorMD5NO := BtnCreate(ErrorMD5Form.Handle, ScaleX(358), ScaleY(100), ScaleX(65), ScaleY(20), 'MD5BreakBtn.png', 1, False);
+  BtnSetFont(hErrorMD5NO, BtnFont.Handle);
+  BtnSetFontColor(hErrorMD5NO, $262626, $262626, $262626, $262626);
+  BtnSetEvent(hErrorMD5NO, BtnMouseEnterEventID, CallBackAddr('SoundEnterPlay'));
+  BtnSetEvent(hErrorMD5NO, BtnClickEventID, CallBackAddr('ErrorMD5NOClick'));
+  BtnSetCursor(hErrorMD5NO, GetSysCursorHandle(32649));
+  BtnSetText(hErrorMD5NO, 'РќРµС‚');
+// РљРЅРѕРїРєРё
+
+// РР·РѕР±СЂР°Р¶РµРЅРёРµ
+  MD5ErrorFormImg := ImgLoad(ErrorMD5Form.Handle, 'MD5ErrorForm.png', ScaleX(0), ScaleY(0), ScaleX(450),  ScaleY(136), True, True);
+  ImgSetVisibility(MD5ErrorFormImg, True);
+  ImgApplyChanges(ErrorMD5Form.Handle);
+// РР·РѕР±СЂР°Р¶РµРЅРёРµ
+
+  SetClassLong(ErrorMD5Form.Handle, -26, GetClassLong(ErrorMD5Form.Handle, -26) or $200);
+  ErrorMD5Form.ShowModal;
+end;
+//================================================= [ Р¤РѕСЂРјР° РѕС€РёР±РєРё ] =================================================\\
+
+Procedure MD5CheckShow(Sender: TObject);
+begin
+  try
+  // Р—РІСѓРє РїСЂРё РЅР°Р¶Р°С‚РёРё
+    SoundClickPlay();
+  // Р—РІСѓРє РїСЂРё РЅР°Р¶Р°С‚РёРё
+
+  // РЎРѕР·РґР°С‘Рј РѕСЃРЅРѕРІРЅСѓСЋ С„РѕСЂРјСѓ
+    MainFormCreate();
+  // РЎРѕР·РґР°С‘Рј РѕСЃРЅРѕРІРЅСѓСЋ С„РѕСЂРјСѓ
+
+  // РЎРѕР·РґР°С‘Рј С‚РµРЅСЊ
+    MD5ShadowImage := ImgLoad(WizardForm.Handle, 'MD5Shadow.png',  ScaleX(0), ScaleY(0), ScaleX(1000), ScaleY(522), True, False);
+    ImgSetVisibility(MD5ShadowImage, True);
+    ImgApplyChanges(WizardForm.Handle);
+  // РЎРѕР·РґР°С‘Рј С‚РµРЅСЊ
+
+  // Р—Р°РїСѓСЃРєР°РµРј РїСЂРѕРІРµСЂРєСѓ MD5
+    MD5PathAndValue();
+    For i := 1 to 100 do FileCountAndSize(ExpandConstant(Path[i]));
+    For i := 1 to Total + 1 do begin
+      MD5Error := True;
+      if not CheckMD(ExpandConstant(Path[i]), MD5Value[i]) then Break;
+      MD5Error := False;
+    end;
+  // Р—Р°РїСѓСЃРєР°РµРј РїСЂРѕРІРµСЂРєСѓ MD5
+
+  // Р•СЃР»Рё РїСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР°, С‚Рѕ СЃРѕР·РґР°С‘Рј С„РѕСЂРјСѓ РѕС€РёР±РєРё
+    if MD5Error and not Close then begin
+      MainMD5Form.Hide;
+      ErrorFormCreate();
+    end;
+  // Р•СЃР»Рё РїСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР°, С‚Рѕ СЃРѕР·РґР°С‘Рј С„РѕСЂРјСѓ РѕС€РёР±РєРё
+  finally
+  // Р’С‹РїРѕР»РЅСЏРµРј СЂР°Р·Р»РёС‡РЅС‹Рµ РґРµР№СЃС‚РІРёСЏ СЃ WizardForm
+    WizardForm.Enabled := True;
+    SetWindowlong(MainMD5Form.Handle, GWL_WNDPROC, MoveMD5);
+    SetTaskBarProgressValue(0);
+    ImgSetVisibility(MD5ShadowImage, False);
+    ImgApplyChanges(WizardForm.Handle);
+  // Р’С‹РїРѕР»РЅСЏРµРј СЂР°Р·Р»РёС‡РЅС‹Рµ РґРµР№СЃС‚РІРёСЏ СЃ WizardForm
+
+  // РћСЃРІРѕР±РѕР¶РґР°РµРј РІСЃРµ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёРµ С„РѕСЂРјС‹
+    if MainMD5Form  <> nil then MainMD5Form.Free;
+    if CloseMD5Form <> nil then CloseMD5Form.Free;
+    if ErrorMD5Form <> nil then ErrorMD5Form.Free;
+  // РћСЃРІРѕР±РѕР¶РґР°РµРј РІСЃРµ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёРµ С„РѕСЂРјС‹
+
+  // Р’С‹РіСЂСѓР¶Р°РµРј РёР·РѕР±СЂР°Р¶РµРЅРёСЏ РёР· РїР°РјСЏС‚Рё
+    ImgRelease(MD5MainFromImg);
+    ImgRelease(MD5ErrorFormImg);
+    ImgRelease(MD5CloseFormImg);
+    ImgRelease(MD5ShadowImage);
+  // Р’С‹РіСЂСѓР¶Р°РµРј РёР·РѕР±СЂР°Р¶РµРЅРёСЏ РёР· РїР°РјСЏС‚Рё
+
+  // РћС‡РёС‰Р°РµРј РїРµСЂРµРјРµРЅРЅС‹Рµ
+    ClearVars();
+  // РћС‡РёС‰Р°РµРј РїРµСЂРµРјРµРЅРЅС‹Рµ
   end;
 end;
-//******************************************************** [Проверка MD5 - Конец] ********************************************************\\
