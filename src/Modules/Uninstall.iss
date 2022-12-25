@@ -1,14 +1,33 @@
-[code]
-//Удаление папки с игрой, если та, по каким-то причинам, не была удалена автоматически:
+п»ї[code]
+Procedure InitializeUninstallProgressForm();
+begin
+  with UninstallProgressForm do begin
+    Position := poScreenCenter;
+    OuterNotebook.Hide;
+    InnerNotebook.Hide;
+    Bevel.Hide;
+    BorderIcons := [];
+    AutoScroll := False;
+    ClientWidth := ScaleX(437);
+    ClientHeight := ScaleY(41);
+    Caption := 'РЈРґР°Р»РµРЅРёРµ вЂ” {#GameName}';
+    with ProgressBar do begin
+      SetBounds(ScaleX(10), ScaleY(11), ScaleX(417), ScaleY(18));
+      Parent := UninstallProgressForm;
+    end;
+  end;
+end;
+
+//РЈРґР°Р»РµРЅРёРµ РїР°РїРєРё СЃ РёРіСЂРѕР№, РµСЃР»Рё С‚Р°, РїРѕ РєР°РєРёРј-С‚Рѕ РїСЂРёС‡РёРЅР°Рј, РЅРµ Р±С‹Р»Р° СѓРґР°Р»РµРЅР° Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё:
 Procedure DelDir(Dir : String);
 var
   R: Integer;
 begin
-  Exec('cmd.exe', ' /C RD /S /Q  ' + '"'+Dir+'"', ExpandConstant('{sys}'), SW_Hide, ewWaitUntilTerminated, R);
+  Exec('cmd.exe', ' /C RD /S /Q  ' + '"' + Dir + '"', ExpandConstant('{sys}'), SW_HIDE, ewWaitUntilTerminated, R);
 end;
-//Удаление папки с игрой, если та, по каким-то причинам, не была удалена автоматически.
+//РЈРґР°Р»РµРЅРёРµ РїР°РїРєРё СЃ РёРіСЂРѕР№, РµСЃР»Рё С‚Р°, РїРѕ РєР°РєРёРј-С‚Рѕ РїСЂРёС‡РёРЅР°Рј, РЅРµ Р±С‹Р»Р° СѓРґР°Р»РµРЅР° Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё.
 
-//Удаление Сохранений
+//РЈРґР°Р»РµРЅРёРµ РЎРѕС…СЂР°РЅРµРЅРёР№
 #ifdef DeleteSaved
   Procedure DeleteSaveGames();
   var
@@ -27,23 +46,23 @@ end;
 
     #ifdef Save1
       if MsgBoxVar[1] = 1 then if MsgBox(ExpandConstant('{cm:DeleteSave}'), MBConfirmation, MB_YESNO) = IDYES then
-        if not DelTree({#Save1}, True, True, True) then MsgBox('Папка не удалена!' + #13 + 'Папки не существует или она задействована...' + #13 + 'Путь: ' + {#Save1}, mbCriticalError, MB_OK);
+        if not DelTree({#Save1}, True, True, True) then MsgBox('РџР°РїРєР° РЅРµ СѓРґР°Р»РµРЅР°!' + #13 + 'РџР°РїРєРё РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ РёР»Рё РѕРЅР° Р·Р°РґРµР№СЃС‚РІРѕРІР°РЅР°...' + #13 + 'РџСѓС‚СЊ: ' + {#Save1}, mbCriticalError, MB_OK);
     #endif
     #ifdef Save2
       if (MsgBoxVar[2] = 1) and (MsgBoxVar[1] = 0) then if MsgBox(ExpandConstant('{cm:DeleteSave}'), MBConfirmation, MB_YESNO) = IDYES then
-        if not DelTree({#Save2}, True, True, True) then MsgBox('Папка не удалена!' + #13 + 'Папки не существует или она задействована...' + #13 + 'Путь: ' + {#Save2}, mbCriticalError, MB_OK);
+        if not DelTree({#Save2}, True, True, True) then MsgBox('РџР°РїРєР° РЅРµ СѓРґР°Р»РµРЅР°!' + #13 + 'РџР°РїРєРё РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ РёР»Рё РѕРЅР° Р·Р°РґРµР№СЃС‚РІРѕРІР°РЅР°...' + #13 + 'РџСѓС‚СЊ: ' + {#Save2}, mbCriticalError, MB_OK);
       if (MsgBoxVar[2] = 1) and (MsgBoxVar[1] = 1) then
-        if not DelTree({#Save2}, True, True, True) then MsgBox('Папка не удалена!' + #13 + 'Папки не существует или она задействована...' + #13 + 'Путь: ' + {#Save2}, mbCriticalError, MB_OK);
+        if not DelTree({#Save2}, True, True, True) then MsgBox('РџР°РїРєР° РЅРµ СѓРґР°Р»РµРЅР°!' + #13 + 'РџР°РїРєРё РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ РёР»Рё РѕРЅР° Р·Р°РґРµР№СЃС‚РІРѕРІР°РЅР°...' + #13 + 'РџСѓС‚СЊ: ' + {#Save2}, mbCriticalError, MB_OK);
     #endif
     #ifdef Save3
       if (MsgBoxVar[3] = 1) and (MsgBoxVar[1] = 0) and (MsgBoxVar[2] = 0) then if MsgBox(ExpandConstant('{cm:DeleteSave}'), MBConfirmation, MB_YESNO) = IDYES then
-        if not DelTree({#Save3}, True, True, True) then MsgBox('Папка не удалена!' + #13 + 'Папки не существует или она задействована...' + #13 + 'Путь: ' + {#Save3}, mbCriticalError, MB_OK);
+        if not DelTree({#Save3}, True, True, True) then MsgBox('РџР°РїРєР° РЅРµ СѓРґР°Р»РµРЅР°!' + #13 + 'РџР°РїРєРё РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ РёР»Рё РѕРЅР° Р·Р°РґРµР№СЃС‚РІРѕРІР°РЅР°...' + #13 + 'РџСѓС‚СЊ: ' + {#Save3}, mbCriticalError, MB_OK);
       if (MsgBoxVar[3] = 1) and (MsgBoxVar[2] = 1) and (MsgBoxVar[2] = 1) or ((MsgBoxVar[2] = 0) and (MsgBoxVar[2] = 1)) or ((MsgBoxVar[2] = 1) and (MsgBoxVar[2] = 0)) then
-        if not DelTree({#Save3}, True, True, True) then MsgBox('Папка не удалена!' + #13 + 'Папки не существует или она задействована...' + #13 + 'Путь: ' + {#Save3}, mbCriticalError, MB_OK);
+        if not DelTree({#Save3}, True, True, True) then MsgBox('РџР°РїРєР° РЅРµ СѓРґР°Р»РµРЅР°!' + #13 + 'РџР°РїРєРё РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ РёР»Рё РѕРЅР° Р·Р°РґРµР№СЃС‚РІРѕРІР°РЅР°...' + #13 + 'РџСѓС‚СЊ: ' + {#Save3}, mbCriticalError, MB_OK);
     #endif
   end;
 #endif
-//Удаление Сохранений
+//РЈРґР°Р»РµРЅРёРµ РЎРѕС…СЂР°РЅРµРЅРёР№
 
 Procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
