@@ -1,9 +1,12 @@
 [Code]
-//модуль для работы с библиотекой botva2.dll версии  0.9.5
-//Created by South.Tver 02.2011
+#ifdef UNICODE
+    #define A "W"
+#else
+    #define A "A"
+#endif
 
 const
-  BTN_MAX_PATH = 1024; //не изменять !!!
+  BTN_MAX_PATH = 1024;
 
   //идентификаторы событий для кнопок
   BtnClickEventID      = 1;
@@ -20,18 +23,16 @@ const
   balVCenter = 4;  //вертикальное выравнивание текста по центру
 
 type
-  #ifndef UNICODE
-  AnsiChar = Char;
+  #ifdef UNICODE
+    PChar = PAnsiChar;
   #endif
-
-  TBtnEventProc = procedure(h:HWND);
-
+  #ifndef UNICODE
+    AnsiChar = Char;
+  #endif
+  TBtnEventProc = Procedure(h:HWND);
   TTextBuf      = array [0..BTN_MAX_PATH-1] of AnsiChar; //не менять размерность массива !!!
 
-//для выполнения нажатий на кнопки нужен innocallback
-function WrapBtnCallback(Callback: TBtnEventProc; ParamCount: Integer): Longword; external 'wrapcallbackaddr@{tmp}\CallbackCtrl.dll stdcall delayload';
-
-function LibImgLoad(Wnd :HWND; buf :PAnsiChar; Size: Longint; Left, Top, Width, Height :integer; Stretch, IsBkg :boolean) :Longint; external 'ImgLoad@{tmp}\b2p.dll stdcall delayload';
+Function LibImgLoad(Wnd :HWND; buf :PAnsiChar; Size: Longint; Left, Top, Width, Height :integer; Stretch, IsBkg :boolean) :Longint; external 'ImgLoad@{tmp}\b2p.dll stdcall delayload';
 //загружает изображение в память, сохраняет переданные параметры
 //Wnd          - хэндл окна, в котором будет выведено изображение
 //FileName     - файл изображения
@@ -50,7 +51,7 @@ function LibImgLoad(Wnd :HWND; buf :PAnsiChar; Size: Longint; Left, Top, Width, 
 //возвращаемое значение - указатель на структуру, хранящей изображение и его парметры, приведенный к типу Longint
 //изображения будут выведены в той последовательности, в которой вызывается ImgLoad
 
-procedure ImgSetVisiblePart(img:Longint; NewLeft, NewTop, NewWidth, NewHeight : integer); external 'ImgSetVisiblePart@{tmp}\b2p.dll stdcall delayload';
+Procedure ImgSetVisiblePart(img:Longint; NewLeft, NewTop, NewWidth, NewHeight : integer); external 'ImgSetVisiblePart@{tmp}\b2p.dll stdcall delayload';
 //сохраняет новые координаты видимой части изображения, новую ширину и высоту. в координатах оригинального изображения
 //img                - значение полученное при вызове ImgLoad.
 //NewLeft,NewTop     - новый левый верхний угол видимой области.
@@ -58,55 +59,53 @@ procedure ImgSetVisiblePart(img:Longint; NewLeft, NewTop, NewWidth, NewHeight : 
 //PS изначально (при вызове ImgLoad) изображение считается полностью видимым.
 //   если возникла необходимость отображать только часть картинки, то используем эту процедуру
 
-procedure ImgGetVisiblePart(img:Longint; var Left, Top, Width, Height : integer); external 'ImgGetVisiblePart@{tmp}\b2p.dll stdcall delayload';
+Procedure ImgGetVisiblePart(img:Longint; var Left, Top, Width, Height : integer); external 'ImgGetVisiblePart@{tmp}\b2p.dll stdcall delayload';
 //возвращает координаты видимой части изображения, ширину и высоту
 //img                - значение полученное при вызове ImgLoad
 //NewLeft,NewTop     - левый верхний угол видимой области
 //NewWidth,NewHeight - ширина, высота видимой области.
 
-procedure ImgSetPosition(img :Longint; NewLeft, NewTop, NewWidth, NewHeight :integer); external 'ImgSetPosition@{tmp}\b2p.dll stdcall delayload';
+Procedure ImgSetPosition(img :Longint; NewLeft, NewTop, NewWidth, NewHeight :integer); external 'ImgSetPosition@{tmp}\b2p.dll stdcall delayload';
 //сохраняет новые координаты для вывода изображения, новую ширину и высоту. в координатах родительского окна
 //img                - значение полученное при вызове ImgLoad
 //NewLeft,NewTop     - новый левый верхний угол
 //NewWidth,NewHeight - новая ширина, высота. если в ImgLoad был передан Stretch=False, то NewWidth,NewHeight игнорируются
 
-procedure ImgGetPosition(img:Longint; var Left, Top, Width, Height:integer); external 'ImgGetPosition@{tmp}\b2p.dll stdcall delayload';
+Procedure ImgGetPosition(img:Longint; var Left, Top, Width, Height:integer); external 'ImgGetPosition@{tmp}\b2p.dll stdcall delayload';
 //возвращает координаты вывода изображения, ширину и высоту
 //img          - значение полученное при вызове ImgLoad
 //Left,Top     - левый верхний угол
 //Width,Height - ширина, высота.
 
-procedure ImgSetVisibility(img :Longint; Visible :boolean); external 'ImgSetVisibility@{tmp}\b2p.dll stdcall delayload';
+Procedure ImgSetVisibility(img :Longint; Visible :boolean); external 'ImgSetVisibility@{tmp}\b2p.dll stdcall delayload';
 //сохраняет параметр видимости изображения
 //img     - значение полученное при вызове ImgLoad
 //Visible - видимость
 
-function ImgGetVisibility(img:Longint):boolean; external 'ImgGetVisibility@{tmp}\b2p.dll stdcall delayload';
+Function ImgGetVisibility(img:Longint):boolean; external 'ImgGetVisibility@{tmp}\b2p.dll stdcall delayload';
 //img - значение полученное при вызове ImgLoad
 //возвращаемое значение - видимость изображения
 
-procedure ImgSetTransparent(img:Longint; Value:integer); external 'ImgSetTransparent@{tmp}\b2p.dll stdcall delayload';
+Procedure ImgSetTransparent(img:Longint; Value:integer); external 'ImgSetTransparent@{tmp}\b2p.dll stdcall delayload';
 //устанавливает прозрачность изображения
 //img   - значение полученное при вызове ImgLoad
 //Value - прозрачность (0-255)
 
-function ImgGetTransparent(img:Longint):integer; external 'ImgGetTransparent@{tmp}\b2p.dll stdcall delayload';
+Function ImgGetTransparent(img:Longint):integer; external 'ImgGetTransparent@{tmp}\b2p.dll stdcall delayload';
 //получить значение прозрачности
 //img   - значение полученное при вызове ImgLoad
 //возвращаемое значение - текущая прозрачность изображения
 
-procedure ImgRelease(img :Longint); external 'ImgRelease@{tmp}\b2p.dll stdcall delayload';
+Procedure ImgRelease(img :Longint); external 'ImgRelease@{tmp}\b2p.dll stdcall delayload';
 //удаляет изображение из памяти
 //img - значение полученное при вызове ImgLoad
 
-procedure ImgApplyChanges(h:HWND); external 'ImgApplyChanges@{tmp}\b2p.dll stdcall delayload';
+Procedure ImgApplyChanges(h:HWND); external 'ImgApplyChanges@{tmp}\b2p.dll stdcall delayload';
 //формирует окончательное изображение для вывода экран,
 //учитывая все изменения внесенные вызовами ImgLoad, ImgSetPosition, ImgSetVisibility, ImgRelease и обновляет окно
 //h - хэндл окна, для которого необходимо сформировать новое изображение
 
-
-
-function LibBtnCreate(hParent :HWND; Left, Top, Width, Height :integer; Buf :PAnsiChar; Size: longInt; ShadowWidth :integer; IsCheckBtn :boolean) :HWND; external 'BtnCreate@{tmp}\b2p.dll stdcall delayload';
+Function LibBtnCreate(hParent :HWND; Left, Top, Width, Height :integer; Buf :PAnsiChar; Size: longInt; ShadowWidth :integer; IsCheckBtn :boolean) :HWND; external 'BtnCreate@{tmp}\b2p.dll stdcall delayload';
 //hParent           - хэндл окна-родителя, на котором будет создана кнопка
 //Left,Top,
 //Width,Height      - без комментариев. то же что и для обычных кнопок
@@ -120,18 +119,18 @@ function LibBtnCreate(hParent :HWND; Left, Top, Width, Height :integer; Buf :PAn
 //                    если False, то создастся обычная кнопка
 //возвращаемое значение - хэндл созданной кнопки
 
-procedure BtnSetText(h :HWND; Text :PAnsiChar); external 'BtnSetText@{tmp}\b2p.dll stdcall delayload';
+Procedure BtnSetText(h :HWND; Text :PAnsiChar); external 'BtnSetText@{tmp}\b2p.dll stdcall delayload';
 //устанавливает текст на кнопке (аналог Button.Caption:='bla-bla-bla')
 //h    - хэндл кнопки (результат возвращенный BtnCreate)
 //Text - текст, который мы хотим увидеть на кнопке
 
-function BtnGetText_(h:HWND; var Text:TTextBuf):integer; external 'BtnGetText@{tmp}\b2p.dll stdcall delayload';
+Function BtnGetText_(h:HWND; var Text:TTextBuf):integer; external 'BtnGetText@{tmp}\b2p.dll stdcall delayload';
 //получает текст кнопки
 //h    - хэндл кнопки (результат возвращенный BtnCreate)
 //Text - буфер принимающий текст кнопки
 //возвращаемое значение - длина текста
 
-procedure BtnSetTextAlignment(h :HWND; HorIndent, VertIndent :integer; Alignment :DWORD); external 'BtnSetTextAlignment@{tmp}\b2p.dll stdcall delayload';
+Procedure BtnSetTextAlignment(h :HWND; HorIndent, VertIndent :integer; Alignment :DWORD); external 'BtnSetTextAlignment@{tmp}\b2p.dll stdcall delayload';
 //устанавливает выравнивание текста на кнопке
 //h          - хэндл кнопки (результат возвращенный BtnCreate)
 //HorIndent  - горизонтальный отступ текста от края кнопки
@@ -139,7 +138,7 @@ procedure BtnSetTextAlignment(h :HWND; HorIndent, VertIndent :integer; Alignment
 //Alignment  - выравнивание текста. задается константами balLeft, balCenter, balRight, balVCenter,
 //             или комбинацией balVCenter с остальными. например, balVCenter or balRight
 
-procedure BtnSetFont(h :HWND; Font :Cardinal); external 'BtnSetFont@{tmp}\b2p.dll stdcall delayload';
+Procedure BtnSetFont(h :HWND; Font :Cardinal); external 'BtnSetFont@{tmp}\b2p.dll stdcall delayload';
 //устанавливает шрифт для кнопки
 //h    - хэндл кнопки (результат возвращенный BtnCreate)
 //Font - дескриптор устанавливаемого шрифта
@@ -162,7 +161,7 @@ procedure BtnSetFont(h :HWND; Font :Cardinal); external 'BtnSetFont@{tmp}\b2p.dl
 //       end;
 //       ну и при выходе из программы (или когда он станет не нужен) не забываем уничтожить свой шрифт Font.Free;
 
-procedure BtnSetFontColor(h :HWND; NormalFontColor, FocusedFontColor, PressedFontColor, DisabledFontColor :Cardinal); external 'BtnSetFontColor@{tmp}\b2p.dll stdcall delayload';
+Procedure BtnSetFontColor(h :HWND; NormalFontColor, FocusedFontColor, PressedFontColor, DisabledFontColor :Cardinal); external 'BtnSetFontColor@{tmp}\b2p.dll stdcall delayload';
 //устанавливает цвет шрифта для кнопки во включенном и выключенном сосотоянии
 //h                 - хэндл кнопки (результат возвращенный BtnCreate)
 //NormalFontColor   - цвет текста на кнопе в нормальном состоянии
@@ -170,96 +169,92 @@ procedure BtnSetFontColor(h :HWND; NormalFontColor, FocusedFontColor, PressedFon
 //PressedFontColor  - цвет текста на кнопе в нажатом состоянии
 //DisabledFontColor - цвет текста на кнопе в отключенном состоянии
 
-function BtnGetVisibility(h :HWND) :boolean; external 'BtnGetVisibility@{tmp}\b2p.dll stdcall delayload';
+Function BtnGetVisibility(h :HWND) :boolean; external 'BtnGetVisibility@{tmp}\b2p.dll stdcall delayload';
 //получает видимость кнопки (аналог f:=Button.Visible)
 //h - хэндл кнопки (результат возвращенный BtnCreate)
 //возвращаемое значение - видимость кнопки
 
-procedure BtnSetVisibility(h :HWND; Value :boolean); external 'BtnSetVisibility@{tmp}\b2p.dll stdcall delayload';
+Procedure BtnSetVisibility(h :HWND; Value :boolean); external 'BtnSetVisibility@{tmp}\b2p.dll stdcall delayload';
 //устанавливает видимость кнопки (аналог Button.Visible:=True / Button.Visible:=False)
 //h     - хэндл кнопки (результат возвращенный BtnCreate)
 //Value - значение видимости
 
-function BtnGetEnabled(h :HWND) :boolean; external 'BtnGetEnabled@{tmp}\b2p.dll stdcall delayload';
+Function BtnGetEnabled(h :HWND) :boolean; external 'BtnGetEnabled@{tmp}\b2p.dll stdcall delayload';
 //получает доступность кнопки (аналог f:=Button.Enabled)
 //h - хэндл кнопки (результат возвращенный BtnCreate)
 //возвращаемое значение - доступность кнопки
 
-procedure BtnSetEnabled(h :HWND; Value :boolean); external 'BtnSetEnabled@{tmp}\b2p.dll stdcall delayload';
+Procedure BtnSetEnabled(h :HWND; Value :boolean); external 'BtnSetEnabled@{tmp}\b2p.dll stdcall delayload';
 //устанвливает доступность кнопки (аналог Button.Enabled:=True / Button.Enabled:=False)
 //h - хэндл кнопки (результат возвращенный BtnCreate)
 //Value - значение доступности кнопки
 
-function BtnGetChecked(h :HWND) :boolean; external 'BtnGetChecked@{tmp}\b2p.dll stdcall delayload';
+Function BtnGetChecked(h :HWND) :boolean; external 'BtnGetChecked@{tmp}\b2p.dll stdcall delayload';
 //получает состояние (включена/выключена) кнопки (аналог f:=Checkbox.Checked)
 //h - хэндл кнопки (результат возвращенный BtnCreate)
 
-procedure BtnSetChecked(h :HWND; Value :boolean); external 'BtnSetChecked@{tmp}\b2p.dll stdcall delayload';
+Procedure BtnSetChecked(h :HWND; Value :boolean); external 'BtnSetChecked@{tmp}\b2p.dll stdcall delayload';
 //устанвливает состояние (включена/выключена) кнопки (аналог Сheckbox.Checked:=True / Сheckbox.Checked:=False)
 //h - хэндл кнопки (результат возвращенный BtnCreate)
 //Value - значение состояния кнопки
 
-procedure BtnSetEvent(h :HWND; EventID :integer; Event :Longword); external 'BtnSetEvent@{tmp}\b2p.dll stdcall delayload';
+Procedure BtnSetEvent(h :HWND; EventID :integer; Event :Longword); external 'BtnSetEvent@{tmp}\b2p.dll stdcall delayload';
 //устанавливает событие для кнопки
 //h       - хэндл кнопки (результат возвращенный BtnCreate)
 //EventID - идентификатор события, заданный константами   BtnClickEventID, BtnMouseEnterEventID, BtnMouseLeaveEventID, BtnMouseMoveEventID
 //Event   - адрес процедуры выполняемой при наступлении указанного события
 //пример использования - BtnSetEvent(hBtn, BtnClickEventID, WrapBtnCallback(@BtnClick,1));
 
-procedure BtnGetPosition(h:HWND; var Left, Top, Width, Height: integer);  external 'BtnGetPosition@{tmp}\b2p.dll stdcall delayload';
+Procedure BtnGetPosition(h:HWND; var Left, Top, Width, Height: integer);  external 'BtnGetPosition@{tmp}\b2p.dll stdcall delayload';
 //получает координаты левого верхнего угла и размер кнопки
 //h             - хэндл кнопки (результат возвращенный BtnCreate)
 //Left, Top     - координаты верхнего левого угла (в координатах родительского окна)
 //Width, Height - ширина, высота кнопки
 
-procedure BtnSetPosition(h:HWND; NewLeft, NewTop, NewWidth, NewHeight: integer);  external 'BtnSetPosition@{tmp}\b2p.dll stdcall delayload';
+Procedure BtnSetPosition(h:HWND; NewLeft, NewTop, NewWidth, NewHeight: integer);  external 'BtnSetPosition@{tmp}\b2p.dll stdcall delayload';
 //устанавливает координаты левого верхнего угла и размер кнопки
 //h                   - хэндл кнопки (результат возвращенный BtnCreate)
 //NewLeft, NewTop     - новые координаты верхнего левого угла (в координатах родительского окна)
 //NewWidth, NewHeight - новые ширина, высота кнопки
 
-procedure BtnRefresh(h :HWND); external 'BtnRefresh@{tmp}\b2p.dll stdcall delayload';
+Procedure BtnRefresh(h :HWND); external 'BtnRefresh@{tmp}\b2p.dll stdcall delayload';
 //немедленно перерисовывает кнопку, в обход очереди сообщений. вызывать, если кнопка не успевает перерисовываться
 //h - хэндл кнопки (результат возвращенный BtnCreate)
 
-procedure BtnSetCursor(h:HWND; hCur:Cardinal); external 'BtnSetCursor@{tmp}\b2p.dll stdcall delayload';
+Procedure BtnSetCursor(h:HWND; hCur:Cardinal); external 'BtnSetCursor@{tmp}\b2p.dll stdcall delayload';
 //устанавливает курсор для кнопки
 //h    - хэндл кнопки (результат возвращенный BtnCreate)
 //hCur - дескриптор устанавливаемого курсора
 //DestroyCursor вызывать не обязательно, он будет уничтожен при вызове gdipShutDown;
 
-function GetSysCursorHandle(id:integer):Cardinal; external 'GetSysCursorHandle@{tmp}\b2p.dll stdcall delayload';
+Function GetSysCursorHandle(id:integer):Cardinal; external 'GetSysCursorHandle@{tmp}\b2p.dll stdcall delayload';
 //загружает стандартный курсор по его идентификатору
 //id - идентификатор стандартного курсора. идентификаторы стандартных курсоров задаются константами OCR_... , значения которых ищем в инете
 //возвращаемое значение  - дескриптор загруженного курсора
 
-procedure gdipShutdown; external 'gdipShutdown@{tmp}\b2p.dll stdcall delayload';
+Procedure gdipShutdown; external 'gdipShutdown@{tmp}\b2p.dll stdcall delayload';
 //обязательно вызвать при завершении приложения
 
-
-
-procedure LibCreateFormFromImage(h:HWND; Buf:PAnsiChar; Size: Longint); external 'CreateFormFromImage@{tmp}\b2p.dll stdcall delayload';
+Procedure LibCreateFormFromImage(h:HWND; Buf:PAnsiChar; Size: Longint); external 'CreateFormFromImage@{tmp}\b2p.dll stdcall delayload';
 //создать форму по PNG-рисунку (в принципе можно использовать другие форматы изображений)
 //h        - хэндл окна
 //FileName - путь к файлу изображения
 //на такой форме не будут видны контролы (кнопки, чекбоксы, эдиты и т.д.) !!!
 
-function CreateBitmapRgn(DC: LongWord; Bitmap: HBITMAP; TransClr: DWORD; dX:integer; dY:integer): LongWord; external 'CreateBitmapRgn@{tmp}\b2p.dll stdcall delayload';
+Function CreateBitmapRgn(DC: LongWord; Bitmap: HBITMAP; TransClr: DWORD; dX:integer; dY:integer): LongWord; external 'CreateBitmapRgn@{tmp}\b2p.dll stdcall delayload';
 //создать регион из битмапа
 //DC       - контекст формы
 //Bitmap   - битмап по которому будем строить регион
 //TransClr - цвет пикселей, которые не будут включены в регион (прозрачный цвет)
 //dX,dY    - смещение региона на форме
 
-procedure SetMinimizeAnimation(Value: Boolean); external 'SetMinimizeAnimation@{tmp}\b2p.dll stdcall delayload';
+Procedure SetMinimizeAnimation(Value: Boolean); external 'SetMinimizeAnimation@{tmp}\b2p.dll stdcall delayload';
 //включить/выклюсить анимацию при сворачивании окон
 
-function GetMinimizeAnimation: Boolean; external 'GetMinimizeAnimation@{tmp}\b2p.dll stdcall delayload';
+Function GetMinimizeAnimation: Boolean; external 'GetMinimizeAnimation@{tmp}\b2p.dll stdcall delayload';
 //получить текущее состояние анимации сворачивания окон
 
-
-
-function ArrayOfAnsiCharToAnsiString(a:TTextBuf):AnsiString;
+Function ArrayOfAnsiCharToAnsiString(a:TTextBuf):AnsiString;
 var
   i:integer;
 begin
@@ -271,7 +266,7 @@ begin
   end;
 end;
 
-function BtnGetText(hBtn:HWND):AnsiString;
+Function BtnGetText(hBtn:HWND):AnsiString;
 var
   buf:TTextBuf;
 begin
@@ -279,7 +274,7 @@ begin
   Result:=ArrayOfAnsiCharToAnsiString(buf); //медленно работает, как по другому сделать хз
 end;
 
-function ImgLoad(Wnd :HWND; Filename :String; Left, Top, Width, Height :integer; Stretch, IsBkg :boolean): Longint;
+Function ImgLoad(Wnd :HWND; Filename :String; Left, Top, Width, Height :integer; Stretch, IsBkg :boolean): Longint;
 var
   buffer: AnsiString;
   FileSize: Longint;
@@ -296,7 +291,7 @@ begin
   Result:= LibImgLoad(Wnd, buffer, FileSize, Left, Top, Width, Height, Stretch, Isbkg)
 end;
 
-function BtnCreate(hParent :HWND; Left, Top, Width, Height :integer; Filename :String; ShadowWidth :integer; IsCheckBtn :boolean) :HWND;
+Function BtnCreate(hParent :HWND; Left, Top, Width, Height :integer; Filename :String; ShadowWidth :integer; IsCheckBtn :boolean) :HWND;
 var
   buffer: AnsiString;
   FileSize: Longint;
@@ -313,7 +308,7 @@ begin
   Result:= LibBtnCreate(hParent, Left, Top, Width, Height, Buffer, FileSize, ShadowWidth, IsCheckBtn);
 end;
 
-procedure CreateFormFromImage(h:HWND; Filename:String);
+Procedure CreateFormFromImage(h:HWND; Filename:String);
 var
   buffer: AnsiString;
   FileSize: Longint;
