@@ -7,7 +7,7 @@
 
 #define GameName "Far Cry 5: Gold Edition" ;Название игры
 #define GameVerName  "Far Cry 5: Gold Edition [V.1.4.0.0 + DLCs]" ;Название игры + Версия
-#define GameNameFolder "Far Cry 5 Gold Edition" ;Название игры (Без \ / ? : * " > < |)
+#define GameNameFolder "Far Cry 5 Gold Edition" ;Название игры (Без \ / ? : * "" > < |)
 #define GameVer "1.4.0.0" ;Версия игры
 
 #define exeGameFile "FarCry5.exe" ;Файл запуска (x86) (Пример: pCARS.exe)
